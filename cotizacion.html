@@ -161,17 +161,37 @@
 
   /* ---- Impresión ---- */
   @media print{
-    body{background:#fff;}
+    body{background:#fff;font-size:12px;}
     .toolbar{display:none !important;}
     .sheet{box-shadow:none;margin:0;max-width:100%;border-radius:0;}
-    .doc{padding:0;}
+    .doc{padding:6mm 0 0;}
+    .head{padding-bottom:10px;}
+    .logo-svg{height:54px;}
+    .company .name{font-size:18px;}
+    .doc-title{font-size:20px;}
+    .section{margin-top:14px;}
     .add-row,.row-del,.col-x{display:none !important;}
-    thead th{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    .totals .grand,thead th{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    input,select,textarea{border:none;padding:2px 0;}
+    thead th{
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;
+      font-size:10px;padding:7px 6px;
+    }
+    tbody td{padding:4px 6px;font-size:11px;}
+    input,select,textarea{border:none;padding:2px 0;font-size:11px;background:transparent;}
     table{min-width:0;}
-    .items-wrap{border:1px solid #999;}
-    @page{margin:14mm;}
+    .items-wrap{border:1px solid #bbb;overflow:visible;}
+    .grid.cliente,.grid.vendedor{grid-template-columns:1.4fr 1fr 1fr;}
+    .field label{font-size:10px;}
+    /* Evitar cortes en secciones clave */
+    .bottom{page-break-inside:avoid;break-inside:avoid;margin-top:14px;}
+    .totals{page-break-inside:avoid;break-inside:avoid;}
+    .totals .grand{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .signoff{page-break-inside:avoid;break-inside:avoid;margin-top:24px;}
+    .footer-note{page-break-inside:avoid;break-inside:avoid;margin-top:16px;}
+    .cond{page-break-inside:avoid;break-inside:avoid;}
+    /* Encabezado de tabla se repite en cada página */
+    thead{display:table-header-group;}
+    tfoot{display:table-footer-group;}
+    @page{size:letter portrait;margin:14mm;}
   }
 </style>
 </head>
@@ -277,11 +297,7 @@
       <div>
         <div class="section-title">Totales</div>
         <div class="totals">
-          <div class="t-row"><span>Neto</span><span class="t-val" id="t-neto">$0</span></div>
-          <div class="t-row desc"><span>Descuento</span><input id="t-descuento" type="number" min="0" step="1000" value="0" placeholder="0"></div>
-          <div class="t-row"><span>Neto con descuento</span><span class="t-val" id="t-neto-desc">$0</span></div>
-          <div class="t-row"><span>IVA (19%)</span><span class="t-val" id="t-iva">$0</span></div>
-          <div class="grand t-row"><span>Total a pagar</span><span class="t-val" id="t-total">$0</span></div>
+          <div class="grand t-row"><span>Total</span><span class="t-val" id="t-total">$0</span></div>
         </div>
       </div>
     </div>
@@ -293,7 +309,7 @@
     </div>
 
     <div class="footer-note">
-      Valores en pesos chilenos (CLP), IVA incluido en el total. Cotización referencial sujeta a confirmación de medidas en visita técnica.
+      Valores en pesos chilenos (CLP). Cotización sujeta a confirmación de medidas. Los impuestos se detallarán en la factura correspondiente.
     </div>
   </div>
 </div>
@@ -349,25 +365,16 @@
       tr.querySelector(".sub").textContent = fmt(sub);
       neto += sub;
     });
-    const desc = parseFloat(document.getElementById("t-descuento").value)||0;
-    const netoDesc = Math.max(neto - desc, 0);
-    const iva = netoDesc*0.19;
-    const total = netoDesc + iva;
-    document.getElementById("t-neto").textContent = fmt(neto);
-    document.getElementById("t-neto-desc").textContent = fmt(netoDesc);
-    document.getElementById("t-iva").textContent = fmt(iva);
-    document.getElementById("t-total").textContent = fmt(total);
+    document.getElementById("t-total").textContent = fmt(neto);
   }
   function resetForm(){
     if(!confirm("¿Limpiar todo el formulario?")) return;
-    document.querySelectorAll("input, textarea").forEach(el=>{ if(el.type!=="date") el.value = (el.id==="t-descuento")?"0":""; });
+    document.querySelectorAll("input, textarea").forEach(el=>{ if(el.type!=="date") el.value = ""; });
     document.querySelectorAll("select").forEach(el=>el.selectedIndex=0);
     document.getElementById("items-body").innerHTML="";
     addRow();
   }
 
-  document.getElementById("t-descuento").addEventListener("input",recalc);
-  // Fecha de hoy por defecto
   (function(){
     const t = new Date();
     const iso = t.toISOString().slice(0,10);
@@ -375,7 +382,6 @@
     const v = new Date(t.getTime()+15*86400000).toISOString().slice(0,10);
     document.getElementById("coti-validez").value = v;
   })();
-  // Tres filas iniciales
   addRow(); addRow(); addRow();
 </script>
 </body>
